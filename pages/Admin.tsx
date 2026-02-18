@@ -454,6 +454,48 @@ const Admin: React.FC<AdminProps> = ({
                 </div>
               )}
             </div>
+
+            {/* Campos de texto personalizado */}
+            <div className="pt-10 border-t border-white/5 space-y-8">
+              <div className="space-y-4">
+                <h3 className="text-xl font-serif text-white italic">Personalización de Texto</h3>
+                <p className="text-white/40 text-xs">Opcional: Si dejas estos campos vacíos, se usarán los datos originales del libro seleccionado.</p>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-8">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 ml-2">Autor / Título Superior</label>
+                  <input
+                    type="text"
+                    placeholder="Ej: Curaduría Especial"
+                    value={localSettings.heroAuthor || ''}
+                    onChange={(e) => setLocalSettings({ ...localSettings, heroAuthor: e.target.value })}
+                    className="w-full glass px-8 py-5 rounded-2xl border border-white/5 outline-none focus:border-gold text-white"
+                  />
+                  <p className="text-[9px] text-white/20 ml-2">Aparece sobre el título principal en color dorado.</p>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/30 ml-2">Descripción del Hero</label>
+                  <textarea
+                    placeholder="Escribe una descripción breve y atrapante para la portada..."
+                    value={localSettings.heroDescription || ''}
+                    onChange={(e) => setLocalSettings({ ...localSettings, heroDescription: e.target.value })}
+                    className="w-full glass px-8 py-5 rounded-2xl border border-white/5 outline-none focus:border-gold text-white h-32 resize-none leading-relaxed"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  onClick={() => onSaveSettings(localSettings)}
+                  disabled={isSaving}
+                  className="px-10 py-5 bg-gold text-emerald rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl hover:bg-white transition-all active:scale-95 disabled:opacity-50"
+                >
+                  {isSaving ? 'Guardando...' : 'Guardar Cambios de Texto'}
+                </button>
+              </div>
+            </div>
           </div>
         )}
 

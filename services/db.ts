@@ -95,7 +95,9 @@ export const db = {
             authorBio: data.author_bio,
             authorImage: data.author_image,
             categories: data.categories || [],
-            heroBookId: data.hero_book_id || undefined
+            heroBookId: data.hero_book_id || undefined,
+            heroAuthor: data.hero_author || undefined,
+            heroDescription: data.hero_description || undefined
         };
     },
 
@@ -108,7 +110,9 @@ export const db = {
             author_bio: settings.authorBio,
             author_image: settings.authorImage,
             categories: settings.categories,
-            hero_book_id: settings.heroBookId || null
+            hero_book_id: settings.heroBookId || null,
+            hero_author: settings.heroAuthor || null,
+            hero_description: settings.heroDescription || null
         };
 
         if (existing) {

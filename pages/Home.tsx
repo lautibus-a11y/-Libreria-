@@ -44,17 +44,17 @@ const Home: React.FC<HomeProps> = ({ books, settings, onNavigate, onAddToCart })
             <h1 className="text-5xl md:text-8xl lg:text-9xl font-serif leading-[0.9] text-white tracking-tighter text-balance">
               {featuredBook?.title || "El Arte de Narrar"}
             </h1>
-            {featuredBook?.author && (
+            {(settings.heroAuthor || featuredBook?.author) && (
               <p className="text-sm md:text-base text-gold/80 font-sans font-medium tracking-[0.2em] uppercase">
-                {featuredBook.author}
+                {settings.heroAuthor || featuredBook?.author}
               </p>
             )}
             <p className="text-lg md:text-xl text-white/50 max-w-2xl mx-auto font-light leading-relaxed font-sans">
-              {featuredBook?.description
+              {settings.heroDescription || (featuredBook?.description
                 ? featuredBook.description.length > 140
                   ? featuredBook.description.slice(0, 140) + '...'
                   : featuredBook.description
-                : `Una curaduría exclusiva de ${settings.authorName}. Historias que trascienden el tiempo y el papel.`}
+                : `Una curaduría exclusiva de ${settings.authorName}. Historias que trascienden el tiempo y el papel.`)}
             </p>
           </div>
 
