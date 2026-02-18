@@ -158,10 +158,13 @@ const App: React.FC = () => {
     };
     updateOrders([...orders, newOrder]);
 
-    window.open(`https://wa.me/${settings.whatsappNumber}?text=${message}`, '_blank');
+    // Limpiamos el carrito antes de la redirección
     setCart([]);
     localStorage.removeItem('lumina_cart');
     setCurrentPage(Page.Home);
+
+    // Redirigimos en la misma pestaña para evitar el problema de "About blank"
+    window.location.href = `https://wa.me/5491172023171?text=${message}`;
   };
 
   const renderPage = () => {
