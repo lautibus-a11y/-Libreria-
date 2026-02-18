@@ -37,7 +37,7 @@ const App: React.FC = () => {
         if (cloudSettings) {
           setSettings(cloudSettings);
         } else {
-          // Configuración por defecto MÍNIMA solo si no existe nada en la nube
+          // Configuración por defecto MÍNIMA en memoria (sin guardar en DB aún)
           const defaultSettings: AppSettings = {
             whatsappNumber: '',
             authorName: 'Nuevo Autor',
@@ -45,7 +45,6 @@ const App: React.FC = () => {
             authorImage: 'https://via.placeholder.com/400',
             categories: ['General']
           };
-          await db.saveSettings(defaultSettings);
           setSettings(defaultSettings);
         }
 
