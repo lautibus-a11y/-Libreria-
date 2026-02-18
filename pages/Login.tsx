@@ -1,21 +1,37 @@
 
 import React, { useState } from 'react';
+import { supabase } from '../services/supabase';
 
 interface LoginProps {
   onLogin: () => void;
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password.trim() === 'admin123') {
-      onLogin();
-    } else {
-      setError('Clave incorrecta. Pista: admin123');
-      setPassword('');
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        onLogin();
+      }
+    } catch (err: any) {
+      setError(err.message || 'Error al iniciar sesión. Verifica tus credenciales.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -32,24 +48,39 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           <p className="text-white/30 text-xs uppercase tracking-[0.3em] font-black">Acceso a Archivo Restringido</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8 text-left">
-          <div className="space-y-3">
-            <label className="block text-[10px] font-black uppercase tracking-widest text-gold/60 ml-2">Clave de Acceso</label>
+        <form onSubmit={handleSubmit} className="space-y-6 text-left">
+          <div className="space-y-2">
+            <label className="block text-[10px] font-black uppercase tracking-widest text-gold/60 ml-2">Email</label>
+            <input
+              type="email"
+              className="w-full px-6 py-4 glass rounded-2xl border border-white/5 focus:border-gold outline-none transition-all text-white placeholder:text-white/10"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="autor@lumina.com"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-[10px] font-black uppercase tracking-widest text-gold/60 ml-2">Contraseña</label>
             <input
               type="password"
-              className="w-full px-6 py-5 glass rounded-2xl border border-white/5 focus:border-gold outline-none transition-all text-white placeholder:text-white/10"
+              className="w-full px-6 py-4 glass rounded-2xl border border-white/5 focus:border-gold outline-none transition-all text-white placeholder:text-white/10"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••••••"
+              required
             />
-            {error && <p className="mt-2 text-[10px] text-red-500 font-bold uppercase tracking-widest ml-2 bg-red-500/10 p-2 rounded-lg">{error}</p>}
           </div>
+
+          {error && <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest ml-2 bg-red-500/10 p-3 rounded-lg text-center">{error}</p>}
 
           <button
             type="submit"
-            className="w-full bg-gold text-emerald py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl hover:bg-white transition-all transform hover:-translate-y-1 active:scale-95"
+            disabled={isLoading}
+            className="w-full bg-gold text-emerald py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl hover:bg-white transition-all transform hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Validar Identidad
+            {isLoading ? 'Verificando...' : 'Validar Identidad'}
           </button>
         </form>
 
