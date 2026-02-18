@@ -10,7 +10,9 @@ interface HomeProps {
 }
 
 const Home: React.FC<HomeProps> = ({ books, settings, onNavigate, onAddToCart }) => {
-  const featuredBook = books.find(b => b.isFeatured) || books[0];
+  const featuredBook = (settings.heroBookId ? books.find(b => b.id === settings.heroBookId) : null)
+    || books.find(b => b.isFeatured)
+    || books[0];
   const [filter, setFilter] = useState('Todos');
   const [search, setSearch] = useState('');
 
@@ -42,9 +44,17 @@ const Home: React.FC<HomeProps> = ({ books, settings, onNavigate, onAddToCart })
             <h1 className="text-5xl md:text-8xl lg:text-9xl font-serif leading-[0.9] text-white tracking-tighter text-balance">
               {featuredBook?.title || "El Arte de Narrar"}
             </h1>
+            {featuredBook?.author && (
+              <p className="text-sm md:text-base text-gold/80 font-sans font-medium tracking-[0.2em] uppercase">
+                {featuredBook.author}
+              </p>
+            )}
             <p className="text-lg md:text-xl text-white/50 max-w-2xl mx-auto font-light leading-relaxed font-sans">
-              Una curaduría exclusiva de <span className="text-gold italic font-medium">{settings.authorName}</span>.
-              Historias que trascienden el tiempo y el papel.
+              {featuredBook?.description
+                ? featuredBook.description.length > 140
+                  ? featuredBook.description.slice(0, 140) + '...'
+                  : featuredBook.description
+                : `Una curaduría exclusiva de ${settings.authorName}. Historias que trascienden el tiempo y el papel.`}
             </p>
           </div>
 

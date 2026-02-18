@@ -28,7 +28,7 @@ const Admin: React.FC<AdminProps> = ({
   onUpdateReviews,
   onLogout
 }) => {
-  const [activeTab, setActiveTab] = useState<'books' | 'settings' | 'orders' | 'reviews' | 'categories'>('books');
+  const [activeTab, setActiveTab] = useState<'books' | 'settings' | 'orders' | 'reviews' | 'categories' | 'hero'>('books');
   const [editingBook, setEditingBook] = useState<Partial<Book> | null>(null);
   const [localSettings, setLocalSettings] = useState<AppSettings>(settings);
   const [isEnhancing, setIsEnhancing] = useState(false);
@@ -87,6 +87,7 @@ const Admin: React.FC<AdminProps> = ({
         <div className="flex overflow-x-auto no-scrollbar gap-1 mb-10 border-b border-white/5 pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
           {[
             { id: 'books', label: 'Obras', count: books.length, icon: <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg> },
+            { id: 'hero', label: 'Hero', icon: <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg> },
             { id: 'categories', label: 'Géneros', count: settings.categories.length, icon: <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 11h.01M7 15h.01M13 7h.01M13 11h.01M13 15h.01M19 7h.01M19 11h.01M19 15h.01" /></svg> },
             { id: 'orders', label: 'Pedidos', count: orders.length, icon: <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg> },
             { id: 'reviews', label: 'Reseñas', count: reviews.length, icon: <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg> },
@@ -390,6 +391,67 @@ const Admin: React.FC<AdminProps> = ({
                     </button>
                   </div>
                 ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'hero' && (
+          <div className="space-y-10 max-w-4xl animate-reveal">
+            <div>
+              <h2 className="text-3xl font-serif text-white italic">Portada Principal</h2>
+              <p className="text-white/20 text-[10px] uppercase tracking-widest mt-1">Elige qué libro aparece destacado en el inicio de tu sitio.</p>
+            </div>
+
+            {/* Preview del hero actual */}
+            {(() => {
+              const current = settings.heroBookId ? books.find(b => b.id === settings.heroBookId) : books.find(b => b.isFeatured) || books[0];
+              return current ? (
+                <div className="glass rounded-[2rem] p-6 border border-gold/20 flex items-center gap-6">
+                  <img src={current.coverImage} alt={current.title} className="h-24 w-16 object-cover rounded-xl shadow-xl flex-shrink-0" />
+                  <div>
+                    <p className="text-[10px] text-gold/60 uppercase tracking-widest font-black mb-1">Libro actual en el Hero</p>
+                    <p className="text-white font-serif text-xl">{current.title}</p>
+                    <p className="text-white/40 text-xs mt-1">{current.author}</p>
+                  </div>
+                </div>
+              ) : null;
+            })()}
+
+            {/* Grid de libros para elegir */}
+            <div>
+              <p className="text-[10px] text-white/30 uppercase tracking-widest font-black mb-6">Selecciona un libro</p>
+              {books.length === 0 ? (
+                <p className="text-white/20 text-sm italic">No hay libros en el catálogo todavía.</p>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  {books.map(book => {
+                    const isSelected = (settings.heroBookId || '') === book.id;
+                    return (
+                      <button
+                        key={book.id}
+                        onClick={() => {
+                          const updated = { ...localSettings, heroBookId: book.id };
+                          setLocalSettings(updated);
+                          onSaveSettings(updated);
+                        }}
+                        className={`relative rounded-2xl overflow-hidden group transition-all duration-300 text-left ${isSelected ? 'ring-2 ring-gold shadow-[0_0_30px_rgba(212,175,55,0.3)]' : 'opacity-60 hover:opacity-100'}`}
+                      >
+                        <img src={book.coverImage} alt={book.title} className="w-full h-48 object-cover" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                        <div className="absolute bottom-0 left-0 right-0 p-3">
+                          <p className="text-white text-xs font-bold leading-tight line-clamp-2">{book.title}</p>
+                          <p className="text-white/50 text-[10px] mt-0.5">{book.author}</p>
+                        </div>
+                        {isSelected && (
+                          <div className="absolute top-2 right-2 bg-gold rounded-full p-1">
+                            <svg className="h-3 w-3 text-emerald" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               )}
             </div>
           </div>

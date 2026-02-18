@@ -41,6 +41,7 @@ export interface AppSettings {
   authorBio: string;
   authorImage: string;
   categories: string[];
+  heroBookId?: string;
 }
 
 export enum Page {
