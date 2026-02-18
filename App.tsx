@@ -9,63 +9,10 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import { db } from './services/db';
 
-// Initial Mock Data (for seeding if DB is empty)
-const INITIAL_BOOKS: Book[] = [
-  {
-    id: '1',
-    title: 'El Susurro del Roble',
-    author: 'Elena Valente',
-    price: 18.50,
-    description: 'Una epopeya de realismo mágico que explorarara los lazos familiares a través de las estaciones en un valle olvidado.',
-    category: 'Ficción',
-    coverImage: 'https://picsum.photos/seed/book1/600/900',
-    stock: 25,
-    isFeatured: true
-  },
-  {
-    id: '2',
-    title: 'Cenizas de Oro',
-    author: 'Elena Valente',
-    price: 22.00,
-    description: 'Un thriller histórico ambientado en la Venecia del siglo XVIII, donde el arte y la traición se entrelazan.',
-    category: 'Histórica',
-    coverImage: 'https://picsum.photos/seed/book2/600/900',
-    stock: 12
-  },
-  {
-    id: '3',
-    title: 'Poemas de Sal y Viento',
-    author: 'Elena Valente',
-    price: 15.00,
-    description: 'Antología poética inspirada en los viajes de la autora por las costas mediterráneas.',
-    category: 'Poesía',
-    coverImage: 'https://picsum.photos/seed/book3/600/900',
-    stock: 50
-  },
-  {
-    id: '4',
-    title: 'La Última Brújula',
-    author: 'Elena Valente',
-    price: 20.00,
-    description: 'Novela de aventuras contemporánea que cuestiona el destino y las elecciones personales.',
-    category: 'Aventura',
-    coverImage: 'https://picsum.photos/seed/book4/600/900',
-    stock: 15
-  }
-];
-
-const INITIAL_SETTINGS: AppSettings = {
-  whatsappNumber: '541172023171',
-  authorName: 'Elena Valente',
-  authorBio: 'Escritora independiente apasionada por las historias que conectan el pasado con el presente. Con más de 10 años explorando géneros que van desde el realismo mágico hasta el thriller histórico.',
-  authorImage: 'https://picsum.photos/seed/author/400/400',
-  categories: ['Ficción', 'Histórica', 'Poesía', 'Aventura']
-};
-
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>(Page.Home);
   const [books, setBooks] = useState<Book[]>([]);
-  const [settings, setSettings] = useState<AppSettings>(INITIAL_SETTINGS);
+  const [settings, setSettings] = useState<AppSettings | null>(null);
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -86,19 +33,20 @@ const App: React.FC = () => {
           db.getReviews()
         ]);
 
-        if (cloudBooks.length > 0) {
-          setBooks(cloudBooks);
-        } else {
-          // DB Vacía, sembramos datos iniciales
-          await db.saveBooks(INITIAL_BOOKS);
-          setBooks(INITIAL_BOOKS);
-        }
-
+        setBooks(cloudBooks);
         if (cloudSettings) {
           setSettings(cloudSettings);
         } else {
-          await db.saveSettings(INITIAL_SETTINGS);
-          setSettings(INITIAL_SETTINGS);
+          // Configuración por defecto MÍNIMA solo si no existe nada en la nube
+          const defaultSettings: AppSettings = {
+            whatsappNumber: '',
+            authorName: 'Nuevo Autor',
+            authorBio: 'Biografía pendiente...',
+            authorImage: 'https://via.placeholder.com/400',
+            categories: ['General']
+          };
+          await db.saveSettings(defaultSettings);
+          setSettings(defaultSettings);
         }
 
         setOrders(cloudOrders);
