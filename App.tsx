@@ -69,6 +69,7 @@ const App: React.FC = () => {
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [errorStatus, setErrorStatus] = useState<string | null>(null);
 
   // New States
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -107,8 +108,9 @@ const App: React.FC = () => {
         const savedCart = localStorage.getItem('lumina_cart');
         if (savedCart) setCart(JSON.parse(savedCart));
 
-      } catch (error) {
-        console.error('Error cargando datos de Supabase:', error);
+      } catch (err: any) {
+        console.error('Error cargando datos de Supabase:', err);
+        setErrorStatus(err.message || 'Error de conexión con la base de datos');
       } finally {
         setIsLoading(false);
       }
@@ -310,19 +312,34 @@ const App: React.FC = () => {
     );
   };
 
-  if (isLoading) {
+  if (isLoading || errorStatus) {
     return (
-      <div className="min-h-screen bg-emerald flex flex-col items-center justify-center space-y-8">
-        <div className="relative">
-          <div className="h-32 w-32 border-2 border-gold/20 rounded-full animate-[ping_3s_infinite]"></div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-4xl font-serif text-gold italic animate-pulse">L</span>
+      <div className="min-h-screen bg-emerald flex flex-col items-center justify-center space-y-8 p-6 text-center">
+        {errorStatus ? (
+          <div className="space-y-6 animate-reveal">
+            <div className="h-20 w-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto text-red-500">
+              <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-white font-serif text-2xl italic">Error de Biblioteca</h2>
+              <p className="text-white/40 text-sm max-w-sm mx-auto font-sans leading-relaxed">{errorStatus}</p>
+              <p className="text-gold/60 text-[10px] uppercase tracking-widest mt-4">Verifica las variables de entorno en Vercel</p>
+            </div>
           </div>
-        </div>
-        <div className="text-center space-y-2">
-          <h2 className="text-white/40 font-black text-[10px] uppercase tracking-[0.5em] animate-reveal">Abriendo Biblioteca</h2>
-          <div className="h-[1px] w-24 bg-gradient-to-r from-transparent via-gold/50 to-transparent mx-auto"></div>
-        </div>
+        ) : (
+          <>
+            <div className="relative">
+              <div className="h-32 w-32 border-2 border-gold/20 rounded-full animate-[ping_3s_infinite]"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-4xl font-serif text-gold italic animate-pulse">L</span>
+              </div>
+            </div>
+            <div className="text-center space-y-2">
+              <h2 className="text-white/40 font-black text-[10px] uppercase tracking-[0.5em] animate-reveal">Abriendo Biblioteca</h2>
+              <div className="h-[1px] w-24 bg-gradient-to-r from-transparent via-gold/50 to-transparent mx-auto"></div>
+            </div>
+          </>
+        )}
       </div>
     );
   }
