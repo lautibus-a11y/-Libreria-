@@ -65,26 +65,28 @@ const App: React.FC = () => {
     initData();
   }, []);
 
-  const saveToLocal = async (newBooks: Book[], newSettings: AppSettings) => {
-    try {
-      await Promise.all([
-        db.saveBooks(newBooks),
-        db.saveSettings(newSettings)
-      ]);
+  // Agrega un libro nuevo a Supabase y actualiza el estado local
+  const addBook = async (bookData: Omit<Book, 'id'>): Promise<void> => {
+    const newBook = await db.addBook(bookData);
+    setBooks(prev => [newBook, ...prev]);
+  };
 
-      const [cloudBooks, cloudSettings] = await Promise.all([
-        db.getBooks(),
-        db.getSettings()
-      ]);
+  // Actualiza un libro existente en Supabase y actualiza el estado local
+  const updateBook = async (book: Book): Promise<void> => {
+    await db.updateBook(book);
+    setBooks(prev => prev.map(b => b.id === book.id ? book : b));
+  };
 
-      if (cloudBooks) setBooks(cloudBooks);
-      if (cloudSettings) setSettings(cloudSettings);
+  // Elimina un libro de Supabase y actualiza el estado local
+  const removeBook = async (id: string): Promise<void> => {
+    await db.deleteBook(id);
+    setBooks(prev => prev.filter(b => b.id !== id));
+  };
 
-    } catch (error) {
-      console.error('Error guardando en Supabase:', error);
-      setBooks(newBooks);
-      setSettings(newSettings);
-    }
+  // Guarda la configuración en Supabase
+  const saveSettings = async (newSettings: AppSettings): Promise<void> => {
+    await db.saveSettings(newSettings);
+    setSettings(newSettings);
   };
 
   const updateOrders = async (newOrders: Order[]) => {
@@ -187,7 +189,10 @@ const App: React.FC = () => {
             settings={settings}
             orders={orders}
             reviews={reviews}
-            onSave={(b, s) => { playClick(); saveToLocal(b, s); }}
+            onAddBook={async (b) => { playClick(); await addBook(b); }}
+            onUpdateBook={async (b) => { playClick(); await updateBook(b); }}
+            onDeleteBook={async (id) => { await removeBook(id); }}
+            onSaveSettings={async (s) => { playClick(); await saveSettings(s); }}
             onUpdateOrders={updateOrders}
             onUpdateReviews={updateReviews}
             onLogout={() => { playClick(); setIsAuthenticated(false); setCurrentPage(Page.Home); }}

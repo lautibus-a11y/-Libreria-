@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Book, AppSettings, Order, Review } from '../types';
 
@@ -7,7 +6,10 @@ interface AdminProps {
   settings: AppSettings;
   orders: Order[];
   reviews: Review[];
-  onSave: (books: Book[], settings: AppSettings) => void;
+  onAddBook: (book: Omit<Book, 'id'>) => Promise<void>;
+  onUpdateBook: (book: Book) => Promise<void>;
+  onDeleteBook: (id: string) => Promise<void>;
+  onSaveSettings: (settings: AppSettings) => Promise<void>;
   onUpdateOrders: (orders: Order[]) => void;
   onUpdateReviews: (reviews: Review[]) => void;
   onLogout: () => void;
@@ -18,7 +20,10 @@ const Admin: React.FC<AdminProps> = ({
   settings,
   orders,
   reviews,
-  onSave,
+  onAddBook,
+  onUpdateBook,
+  onDeleteBook,
+  onSaveSettings,
   onUpdateOrders,
   onUpdateReviews,
   onLogout
@@ -27,30 +32,38 @@ const Admin: React.FC<AdminProps> = ({
   const [editingBook, setEditingBook] = useState<Partial<Book> | null>(null);
   const [localSettings, setLocalSettings] = useState<AppSettings>(settings);
   const [isEnhancing, setIsEnhancing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSaveBook = () => {
+  const handleSaveBook = async () => {
     if (!editingBook) return;
-
-    let updatedBooks;
-    if (editingBook.id) {
-      updatedBooks = books.map(b => b.id === editingBook.id ? (editingBook as Book) : b);
-    } else {
-      const newBook = {
-        ...editingBook,
-        id: 'new-' + Date.now(),
-        coverImage: editingBook.coverImage || 'https://picsum.photos/seed/' + Math.random() + '/600/900'
-      } as Book;
-      updatedBooks = [...books, newBook];
+    setIsSaving(true);
+    try {
+      if (editingBook.id) {
+        // Actualizar libro existente
+        await onUpdateBook(editingBook as Book);
+      } else {
+        // Crear libro nuevo
+        const { id: _id, ...bookData } = editingBook as Book;
+        await onAddBook({
+          ...bookData,
+          coverImage: editingBook.coverImage || 'https://picsum.photos/seed/' + Math.random() + '/600/900'
+        });
+      }
+      setEditingBook(null);
+    } catch (err: any) {
+      alert('Error guardando libro: ' + err.message);
+    } finally {
+      setIsSaving(false);
     }
-
-    onSave(updatedBooks, localSettings);
-    setEditingBook(null);
   };
 
-  const handleDeleteBook = (id: string) => {
+  const handleDeleteBook = async (id: string) => {
     if (window.confirm('¿Estás seguro de eliminar este libro?')) {
-      const updatedBooks = books.filter(b => b.id !== id);
-      onSave(updatedBooks, localSettings);
+      try {
+        await onDeleteBook(id);
+      } catch (err: any) {
+        alert('Error eliminando libro: ' + err.message);
+      }
     }
   };
 
@@ -401,7 +414,7 @@ const Admin: React.FC<AdminProps> = ({
                         const updatedCats = localSettings.categories.filter(c => c !== cat);
                         const updatedSettings = { ...localSettings, categories: updatedCats };
                         setLocalSettings(updatedSettings);
-                        onSave(books, updatedSettings);
+                        onSaveSettings(updatedSettings);
                       }}
                       className="text-red-400/20 group-hover:text-red-400 transition-colors p-2"
                     >
@@ -428,7 +441,7 @@ const Admin: React.FC<AdminProps> = ({
                           const updatedCats = [...localSettings.categories, input.value.trim()];
                           const updatedSettings = { ...localSettings, categories: updatedCats };
                           setLocalSettings(updatedSettings);
-                          onSave(books, updatedSettings);
+                          onSaveSettings(updatedSettings);
                           input.value = '';
                         }
                       }}
@@ -493,7 +506,7 @@ const Admin: React.FC<AdminProps> = ({
               </div>
 
               <button
-                onClick={() => onSave(books, localSettings)}
+                onClick={() => onSaveSettings(localSettings)}
                 className="w-full bg-gold text-emerald py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.3em] shadow-[0_20px_50px_rgba(212,175,55,0.2)] hover:bg-white transition-all transform hover:-translate-y-2"
               >
                 Actualizar Perfil
@@ -609,9 +622,10 @@ const Admin: React.FC<AdminProps> = ({
               <div className="flex justify-end pt-4 sm:pt-8 bg-emerald sm:bg-transparent -mx-6 -mb-6 p-6 sm:p-0 border-t border-white/5 sm:border-0 sticky bottom-0 sm:relative">
                 <button
                   onClick={handleSaveBook}
-                  className="w-full sm:w-auto px-10 py-5 sm:px-16 sm:py-6 bg-gold text-emerald rounded-xl sm:rounded-[2rem] font-black text-[10px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.3em] shadow-xl hover:bg-white transition-all active:scale-95"
+                  disabled={isSaving}
+                  className="w-full sm:w-auto px-10 py-5 sm:px-16 sm:py-6 bg-gold text-emerald rounded-xl sm:rounded-[2rem] font-black text-[10px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.3em] shadow-xl hover:bg-white transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Confirmar Registro
+                  {isSaving ? 'Guardando...' : 'Confirmar Registro'}
                 </button>
               </div>
             </div>

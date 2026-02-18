@@ -23,45 +23,57 @@ export const db = {
         }));
     },
 
-    async saveBooks(books: Book[]) {
-        console.log('Sincronizando libros con Supabase...', books.length);
+    // Guarda UN libro nuevo en Supabase y devuelve el libro con su UUID real
+    async addBook(book: Omit<Book, 'id'>): Promise<Book> {
+        const { data, error } = await supabase
+            .from('books')
+            .insert({
+                title: book.title,
+                author: book.author,
+                price: book.price,
+                description: book.description,
+                category: book.category,
+                cover_image: book.coverImage,
+                stock: book.stock,
+                is_featured: !!book.isFeatured
+            })
+            .select()
+            .single();
 
-        // 1. Obtener IDs actuales para manejar eliminaciones
-        const { data: currentDbBooks, error: fetchError } = await supabase.from('books').select('id');
-        if (fetchError) throw fetchError;
-
-        const dbIds = currentDbBooks?.map(b => b.id) || [];
-        // UUIDs de Supabase tienen 36 caracteres.
-        const localIds = books.map(b => b.id).filter(id => id.length === 36);
-
-        const idsToDelete = dbIds.filter(id => !localIds.includes(id));
-        if (idsToDelete.length > 0) {
-            console.log('Eliminando libros obsoletos:', idsToDelete.length);
-            await supabase.from('books').delete().in('id', idsToDelete);
-        }
-
-        // 2. Upsert de libros actuales
-        const booksToUpsert = books.map(b => ({
-            // Si el ID no es un UUID de 36, dejamos que Supabase genere uno nuevo
-            id: b.id.length === 36 ? b.id : undefined,
-            title: b.title,
-            author: b.author,
-            price: b.price,
-            description: b.description,
-            category: b.category,
-            cover_image: b.coverImage,
-            stock: b.stock,
-            is_featured: !!b.isFeatured
-        }));
-
-        const { error: upsertError } = await supabase.from('books').upsert(booksToUpsert);
-        if (upsertError) {
-            console.error('Error en upsert de libros:', upsertError);
-            throw upsertError;
-        }
+        if (error) throw error;
+        return {
+            id: data.id,
+            title: data.title,
+            author: data.author,
+            price: parseFloat(data.price),
+            description: data.description,
+            category: data.category,
+            coverImage: data.cover_image,
+            stock: data.stock,
+            isFeatured: data.is_featured
+        };
     },
 
-    async deleteBook(id: string) {
+    // Actualiza un libro existente por su UUID
+    async updateBook(book: Book): Promise<void> {
+        const { error } = await supabase
+            .from('books')
+            .update({
+                title: book.title,
+                author: book.author,
+                price: book.price,
+                description: book.description,
+                category: book.category,
+                cover_image: book.coverImage,
+                stock: book.stock,
+                is_featured: !!book.isFeatured
+            })
+            .eq('id', book.id);
+
+        if (error) throw error;
+    },
+
+    async deleteBook(id: string): Promise<void> {
         const { error } = await supabase.from('books').delete().eq('id', id);
         if (error) throw error;
     },
@@ -86,7 +98,7 @@ export const db = {
         };
     },
 
-    async saveSettings(settings: AppSettings) {
+    async saveSettings(settings: AppSettings): Promise<void> {
         const { data: existing } = await supabase.from('settings').select('id').limit(1).single();
 
         const settingsData = {
@@ -124,7 +136,7 @@ export const db = {
         }));
     },
 
-    async saveOrder(order: Order) {
+    async saveOrder(order: Order): Promise<void> {
         const { error } = await supabase.from('orders').insert({
             items: order.items,
             total: order.total,
@@ -134,7 +146,7 @@ export const db = {
         if (error) throw error;
     },
 
-    async updateOrderStatus(orderId: string, status: string) {
+    async updateOrderStatus(orderId: string, status: string): Promise<void> {
         const { error } = await supabase.from('orders').update({ status }).eq('id', orderId);
         if (error) throw error;
     },
@@ -157,7 +169,7 @@ export const db = {
         }));
     },
 
-    async saveReview(review: Review) {
+    async saveReview(review: Review): Promise<void> {
         const { error } = await supabase.from('reviews').insert({
             book_id: review.bookId,
             user_name: review.userName,
@@ -167,7 +179,7 @@ export const db = {
         if (error) throw error;
     },
 
-    async deleteReview(id: string) {
+    async deleteReview(id: string): Promise<void> {
         const { error } = await supabase.from('reviews').delete().eq('id', id);
         if (error) throw error;
     }
