@@ -1,0 +1,7 @@
+{
+  "name": "Lumina Editorial - Autor Premium",
+  "description": "Una plataforma elegante y moderna para autores independientes que desean vender sus libros directamente vía WhatsApp, con diseño editorial premium y panel de administración.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
