@@ -7,14 +7,16 @@ import Admin from './pages/Admin';
 import Login from './pages/Login';
 import Header from './components/Header';
 import Footer from './components/Footer';
-// Initial Mock Data
+import { db } from './services/db';
+
+// Initial Mock Data (for seeding if DB is empty)
 const INITIAL_BOOKS: Book[] = [
   {
     id: '1',
     title: 'El Susurro del Roble',
     author: 'Elena Valente',
     price: 18.50,
-    description: 'Una epopeya de realismo mágico que explora los lazos familiares a través de las estaciones en un valle olvidado.',
+    description: 'Una epopeya de realismo mágico que explorarara los lazos familiares a través de las estaciones en un valle olvidado.',
     category: 'Ficción',
     coverImage: 'https://picsum.photos/seed/book1/600/900',
     stock: 25,
@@ -62,10 +64,12 @@ const INITIAL_SETTINGS: AppSettings = {
 
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>(Page.Home);
-  const [books, setBooks] = useState<Book[]>(INITIAL_BOOKS);
+  const [books, setBooks] = useState<Book[]>([]);
   const [settings, setSettings] = useState<AppSettings>(INITIAL_SETTINGS);
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorStatus, setErrorStatus] = useState<string | null>(null);
 
   // New States
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -73,34 +77,75 @@ const App: React.FC = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
 
   useEffect(() => {
-    const savedBooks = localStorage.getItem('lumina_books');
-    const savedSettings = localStorage.getItem('lumina_settings');
-    const savedCart = localStorage.getItem('lumina_cart');
-    const savedOrders = localStorage.getItem('lumina_orders');
-    const savedReviews = localStorage.getItem('lumina_reviews');
+    const initData = async () => {
+      try {
+        const [cloudBooks, cloudSettings, cloudOrders, cloudReviews] = await Promise.all([
+          db.getBooks(),
+          db.getSettings(),
+          db.getOrders(),
+          db.getReviews()
+        ]);
 
-    if (savedBooks) setBooks(JSON.parse(savedBooks));
-    if (savedSettings) setSettings(JSON.parse(savedSettings));
-    if (savedCart) setCart(JSON.parse(savedCart));
-    if (savedOrders) setOrders(JSON.parse(savedOrders));
-    if (savedReviews) setReviews(JSON.parse(savedReviews));
+        if (cloudBooks.length > 0) {
+          setBooks(cloudBooks);
+        } else {
+          // DB Vacía, sembramos datos iniciales
+          await db.saveBooks(INITIAL_BOOKS);
+          setBooks(INITIAL_BOOKS);
+        }
+
+        if (cloudSettings) {
+          setSettings(cloudSettings);
+        } else {
+          await db.saveSettings(INITIAL_SETTINGS);
+          setSettings(INITIAL_SETTINGS);
+        }
+
+        setOrders(cloudOrders);
+        setReviews(cloudReviews);
+
+        const savedCart = localStorage.getItem('lumina_cart');
+        if (savedCart) setCart(JSON.parse(savedCart));
+
+      } catch (err: any) {
+        console.error('Error cargando datos de Supabase:', err);
+        setErrorStatus(err.message || 'Error de conexión con la base de datos');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initData();
   }, []);
 
-  const saveToLocal = (newBooks: Book[], newSettings: AppSettings) => {
-    setBooks(newBooks);
-    setSettings(newSettings);
-    localStorage.setItem('lumina_books', JSON.stringify(newBooks));
-    localStorage.setItem('lumina_settings', JSON.stringify(newSettings));
+  const saveToLocal = async (newBooks: Book[], newSettings: AppSettings) => {
+    try {
+      await Promise.all([
+        db.saveBooks(newBooks),
+        db.saveSettings(newSettings)
+      ]);
+
+      const [cloudBooks, cloudSettings] = await Promise.all([
+        db.getBooks(),
+        db.getSettings()
+      ]);
+
+      if (cloudBooks) setBooks(cloudBooks);
+      if (cloudSettings) setSettings(cloudSettings);
+
+    } catch (error) {
+      console.error('Error guardando en Supabase:', error);
+      setBooks(newBooks);
+      setSettings(newSettings);
+    }
   };
 
-  const updateOrders = (newOrders: Order[]) => {
+  const updateOrders = async (newOrders: Order[]) => {
     setOrders(newOrders);
-    localStorage.setItem('lumina_orders', JSON.stringify(newOrders));
   };
 
-  const updateReviews = (newReviews: Review[]) => {
+  const updateReviews = async (newReviews: Review[]) => {
     setReviews(newReviews);
-    localStorage.setItem('lumina_reviews', JSON.stringify(newReviews));
   };
 
   const playClick = useCallback(() => {
@@ -245,6 +290,38 @@ const App: React.FC = () => {
       </div>
     );
   };
+
+  if (isLoading || errorStatus) {
+    return (
+      <div className="min-h-screen bg-emerald flex flex-col items-center justify-center space-y-8 p-6 text-center">
+        {errorStatus ? (
+          <div className="space-y-6 animate-reveal">
+            <div className="h-20 w-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto text-red-500">
+              <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-white font-serif text-2xl italic">Error de Biblioteca</h2>
+              <p className="text-white/40 text-sm max-w-sm mx-auto font-sans leading-relaxed">{errorStatus}</p>
+              <p className="text-gold/60 text-[10px] uppercase tracking-widest mt-4">Verifica las variables de entorno en Vercel</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="relative">
+              <div className="h-32 w-32 border-2 border-gold/20 rounded-full animate-[ping_3s_infinite]"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-4xl font-serif text-gold italic animate-pulse">L</span>
+              </div>
+            </div>
+            <div className="text-center space-y-2">
+              <h2 className="text-white/40 font-black text-[10px] uppercase tracking-[0.5em] animate-reveal">Abriendo Biblioteca</h2>
+              <div className="h-[1px] w-24 bg-gradient-to-r from-transparent via-gold/50 to-transparent mx-auto"></div>
+            </div>
+          </>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
