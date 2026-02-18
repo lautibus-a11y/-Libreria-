@@ -24,19 +24,26 @@ export const db = {
     },
 
     async saveBooks(books: Book[]) {
+        console.log('Sincronizando libros con Supabase...', books.length);
+
         // 1. Obtener IDs actuales para manejar eliminaciones
-        const { data: currentDbBooks } = await supabase.from('books').select('id');
+        const { data: currentDbBooks, error: fetchError } = await supabase.from('books').select('id');
+        if (fetchError) throw fetchError;
+
         const dbIds = currentDbBooks?.map(b => b.id) || [];
-        const localIds = books.map(b => b.id).filter(id => id.length > 20); // UUIDs son largos
+        // UUIDs de Supabase tienen 36 caracteres.
+        const localIds = books.map(b => b.id).filter(id => id.length === 36);
 
         const idsToDelete = dbIds.filter(id => !localIds.includes(id));
         if (idsToDelete.length > 0) {
+            console.log('Eliminando libros obsoletos:', idsToDelete.length);
             await supabase.from('books').delete().in('id', idsToDelete);
         }
 
         // 2. Upsert de libros actuales
         const booksToUpsert = books.map(b => ({
-            id: b.id.length > 20 ? b.id : undefined,
+            // Si el ID no es un UUID de 36, dejamos que Supabase genere uno nuevo
+            id: b.id.length === 36 ? b.id : undefined,
             title: b.title,
             author: b.author,
             price: b.price,
@@ -44,11 +51,14 @@ export const db = {
             category: b.category,
             cover_image: b.coverImage,
             stock: b.stock,
-            is_featured: b.isFeatured
+            is_featured: !!b.isFeatured
         }));
 
-        const { error } = await supabase.from('books').upsert(booksToUpsert);
-        if (error) throw error;
+        const { error: upsertError } = await supabase.from('books').upsert(booksToUpsert);
+        if (upsertError) {
+            console.error('Error en upsert de libros:', upsertError);
+            throw upsertError;
+        }
     },
 
     async deleteBook(id: string) {
