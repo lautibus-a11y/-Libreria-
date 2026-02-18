@@ -37,7 +37,7 @@ const Admin: React.FC<AdminProps> = ({
     } else {
       const newBook = {
         ...editingBook,
-        id: 'temp-' + Date.now(),
+        id: Date.now().toString(),
         coverImage: editingBook.coverImage || 'https://picsum.photos/seed/' + Math.random() + '/600/900'
       } as Book;
       updatedBooks = [...books, newBook];
