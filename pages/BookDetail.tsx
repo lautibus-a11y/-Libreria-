@@ -88,30 +88,50 @@ const BookDetail: React.FC<BookDetailProps> = ({ book, onBack, onAddToCart }) =>
         </div>
       </div>
 
-      {/* Modern Preview Modal */}
       {showPreview && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-8">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-8">
           <div className="absolute inset-0 bg-emerald/95 backdrop-blur-3xl animate-blur-in" onClick={() => setShowPreview(false)}></div>
-          <div className="relative bg-beige w-full max-w-5xl rounded-[3rem] overflow-hidden shadow-[0_100px_200px_rgba(0,0,0,0.8)] flex flex-col animate-reveal">
-            <header className="px-12 py-10 border-b border-black/5 flex justify-between items-center bg-white/20">
-              <div className="space-y-1">
-                <p className="text-[9px] font-black uppercase tracking-widest text-black/40">Muestra de Calidad</p>
-                <h2 className="text-3xl font-serif text-emerald italic">{book.title}</h2>
+          <div className="relative bg-beige w-full max-w-5xl h-[85vh] md:h-auto md:max-h-[90vh] rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-[0_100px_200px_rgba(0,0,0,0.8)] flex flex-col animate-reveal">
+
+            {/* Header Sticky */}
+            <header className="px-6 py-4 md:px-12 md:py-10 border-b border-black/5 flex justify-between items-center bg-beige/80 backdrop-blur-md z-10 sticky top-0">
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setShowPreview(false)}
+                  className="h-10 w-10 md:h-12 md:w-12 rounded-full glass border border-black/10 flex items-center justify-center text-emerald hover:bg-emerald hover:text-white transition-all active:scale-90"
+                >
+                  <svg className="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <div className="space-y-0.5">
+                  <p className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-black/40">Muestra de Calidad</p>
+                  <h2 className="text-xl md:text-3xl font-serif text-emerald italic line-clamp-1">{book.title}</h2>
+                </div>
               </div>
-              <button onClick={() => setShowPreview(false)} className="h-12 w-12 rounded-full glass border-black/5 flex items-center justify-center text-emerald/40 hover:text-emerald transition-all hover:rotate-90">
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
             </header>
-            <div className="flex-grow overflow-y-auto p-16 md:p-28 font-serif text-2xl md:text-3xl leading-[1.6] text-emerald italic bg-[url('https://www.transparenttextures.com/patterns/paper.png')]">
-              <p className="mb-12 first-letter:text-7xl first-letter:font-serif first-letter:mr-3 first-letter:float-left first-letter:text-gold">
+
+            {/* Content Scrollable */}
+            <div className="flex-grow overflow-y-auto p-8 md:p-16 lg:p-28 font-serif text-lg md:text-2xl lg:text-3xl leading-[1.8] text-emerald italic bg-[url('https://www.transparenttextures.com/patterns/paper.png')] scroll-smooth">
+              <p className="mb-8 md:mb-12 first-letter:text-5xl md:first-letter:text-7xl first-letter:font-serif first-letter:mr-3 first-letter:float-left first-letter:text-gold text-justify">
                 Las sombras se alargaban sobre el valle de Elena Valente con una parsimonia que solo los siglos de olvido pueden justificar. En cada rincón del bosque, un susurro...
               </p>
-              <p className="mb-12">
+              <p className="mb-8 md:mb-12 text-justify">
                 No era una voz humana, sino el crujir de lo antiguo enfrentándose a lo nuevo. {book.title} comenzaba así, como un secreto compartido entre el viento y el lector.
               </p>
-              <p className="text-gold font-sans text-xs tracking-widest uppercase font-black text-center pt-20 border-t border-black/5">Fin del fragmento gratuito</p>
+              <p className="mb-8 text-justify">
+                La tinta parecía cobrar vida sobre el pergamino, trazando destinos entrelazados que desafiaban la lógica mundana. Cada página, un universo contenido en promesas de papel y sueños de tinta fresca.
+              </p>
+
+              <div className="pt-12 pb-8 border-t border-black/5 mt-12 text-center space-y-6">
+                <p className="text-gold font-sans text-[10px] tracking-widest uppercase font-black">Fin del fragmento gratuito</p>
+                <button
+                  onClick={() => setShowPreview(false)}
+                  className="w-full md:w-auto px-8 py-4 bg-emerald/5 text-emerald rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-emerald hover:text-white transition-all"
+                >
+                  Cerrar Vista Previa
+                </button>
+              </div>
             </div>
           </div>
         </div>
