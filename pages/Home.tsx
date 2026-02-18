@@ -26,7 +26,7 @@ const Home: React.FC<HomeProps> = ({ books, settings, onNavigate, onAddToCart })
   return (
     <div className="bg-emerald font-body">
       {/* Cinematic Hero Section */}
-      <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden px-8">
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden px-8 pt-24 md:pt-32">
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-gradient-to-b from-emerald/40 via-emerald/80 to-emerald z-10"></div>
           <img
@@ -76,7 +76,7 @@ const Home: React.FC<HomeProps> = ({ books, settings, onNavigate, onAddToCart })
       </section>
 
       {/* Catalog Section */}
-      <section id="catalog-section" className="pt-4 pb-32 bg-emerald">
+      <section id="catalog-section" className="pt-24 pb-32 bg-emerald">
         <div className="max-w-7xl mx-auto px-8 lg:px-12">
           <header className="mb-20 space-y-12">
             <div className="text-center space-y-4">
